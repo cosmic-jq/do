@@ -1,0 +1,222 @@
+## Program 4 – Git and Docker Integration
+
+### 1. Create project folder
+
+```
+cd ~/Desktop/DevOps
+mkdir prog4
+cd prog4
+```
+
+### 2. Initialize Node.js project
+
+```
+npm init -y
+npm install express
+```
+
+### 3. Create `index.js`
+
+```
+nano index.js
+```
+
+```
+const express = require("express");
+
+const app = express();
+
+const PORT = 3000;
+
+app.get("/", (req, res) => {
+    res.send("Hello from Git + Docker Integration!");
+});
+
+app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+});
+```
+
+Save using `Ctrl + O` → Enter → `Ctrl + X`.
+
+### 4. Create `Dockerfile`
+
+```
+nano Dockerfile
+```
+
+```
+# Stage 1 - Build Stage
+FROM node:18 AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+# Stage 2 - Runtime Stage
+FROM node:18-slim
+
+WORKDIR /app
+
+COPY --from=build /app /app
+
+EXPOSE 3000
+
+CMD ["node", "index.js"]
+```
+
+### 5. Build Docker image
+
+```
+sudo docker build -t prog4 .
+sudo docker images
+```
+
+### 6. Run Docker container
+
+```
+sudo docker run -d -p 3000:3000 prog4
+sudo docker ps
+```
+
+### 7. Test in browser
+
+Open:
+
+```
+http://localhost:3000
+```
+
+Expected output:
+
+```
+Hello from Git + Docker Integration!
+```
+
+### 8. Create GitHub repository
+
+Create a repository named `prog4` at:
+
+[https://github.com/new](https://github.com/new?utm_source=chatgpt.com)
+
+Do not initialize it with README, `.gitignore`, or license.
+
+### 9. Create `.gitignore`
+
+```
+nano .gitignore
+```
+
+```
+node_modules/
+```
+
+### 10. Initialize Git
+
+```
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+```
+
+### 11. Connect GitHub repository
+
+Replace `YOUR_USERNAME` with your GitHub username.
+
+```
+git remote add origin https://github.com/YOUR_USERNAME/prog4.git
+git remote -v
+```
+
+### 12. Push to GitHub
+
+```
+git push -u origin main
+```
+
+Enter your GitHub username and Personal Access Token when prompted.
+
+### 13. Update `index.js`
+
+```
+nano index.js
+```
+
+Change the response line to:
+
+```
+res.send("Updated Version - Git and Docker!");
+```
+
+### 14. Commit and push changes
+
+```
+git add .
+git commit -m "Updated application message"
+git push
+```
+
+### 15. Rebuild Docker image
+
+```
+sudo docker build -t prog4:v2 .
+```
+
+### 16. Run updated container
+
+```
+sudo docker run -d -p 3000:3000 prog4:v2
+sudo docker ps
+```
+
+### 17. Verify updated application
+
+Open in browser:
+
+```
+http://localhost:3000
+```
+
+Expected output:
+
+```
+Updated Version - Git and Docker!
+```
+
+### 18. Final verification
+
+```
+git status
+git log --oneline
+git remote -v
+sudo docker images
+sudo docker ps
+```
+
+### Project structure
+
+```
+prog4/
+├── .gitignore
+├── Dockerfile
+├── index.js
+├── package.json
+├── package-lock.json
+└── node_modules/
+```
+
+Note: If you run the updated container on the same port while the first container is still running, Docker will report that port 3000 is already in use. Stop and remove the first container before running the updated one:
+
+```
+sudo docker ps
+sudo docker stop <container_id>
+sudo docker rm <container_id>
+```
+
+Then run the updated image.
+
