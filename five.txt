@@ -1,0 +1,112 @@
+# Program 5 – Jenkins using Docker
+
+## Step 1: Check Docker
+
+```
+docker --version
+docker compose version
+sudo systemctl status docker
+```
+
+If inactive:
+
+```
+sudo systemctl start docker
+```
+
+## Step 2: Create project directory
+
+```
+cd ~/Desktop
+mkdir program-5
+cd program-5
+```
+
+## Step 3: Create Dockerfile
+
+```
+nano Dockerfile
+```
+
+```
+FROM jenkins/jenkins:lts
+
+# Switch to root user to install tools
+USER root
+
+# Install Docker inside Jenkins container
+RUN apt-get update && apt-get install -y docker.io
+
+# Switch back to Jenkins user
+USER jenkins
+```
+
+Save: `Ctrl + O` → `Enter` → `Ctrl + X`
+
+## Step 4: Create docker-compose.yml
+
+```
+nano docker-compose.yml
+```
+
+```
+version: '3.8'
+
+services:
+  jenkins:
+    build: .
+    image: program5-jenkins:latest
+    container_name: jenkins-ci
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  jenkins_home:
+```
+
+Save: `Ctrl + O` → `Enter` → `Ctrl + X`
+
+## Step 5: Build and run Jenkins
+
+```
+docker compose build
+docker compose up -d
+docker ps
+docker logs jenkins-ci
+```
+
+## Step 6: Access Jenkins
+
+Get initial admin password:
+
+```
+docker exec jenkins-ci cat /var/jenkins_home/secrets/initialAdminPassword
+```
+
+Open in browser:
+
+```
+http://localhost:8080
+```
+
+## Step 7: List and delete Docker image
+
+```
+docker images
+docker compose down
+docker rmi program5-jenkins:latest
+docker images
+```
+
+## Final project structure
+
+```
+program-5/
+│
+├── Dockerfile
+└── docker-compose.yml
+```
