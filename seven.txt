@@ -1,0 +1,96 @@
+Here's Program 7 with the same commands and YAML as your manual. The printed YAML lost its indentation, so it's indented properly below; otherwise the content is identical.
+
+**Step 1: Start Minikube**
+```bash
+minikube start
+```
+
+**Step 2: Check Minikube status**
+```bash
+minikube status
+```
+
+**Step 3: Expected output**
+```
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+```
+
+**Step 4: If any service isn't running**
+```bash
+minikube delete
+minikube start --driver=docker
+```
+
+**Step 5: Create `nginx-deployment.yaml`**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest   # already exists on Docker Hub
+        ports:
+        - containerPort: 80
+```
+
+**Step 6: Apply the deployment**
+```bash
+kubectl apply -f nginx-deployment.yaml
+```
+
+**Step 7: Check status**
+```bash
+kubectl get deployments
+kubectl get pods
+```
+
+**Step 8: Expose the deployment as a Service**
+```bash
+kubectl expose deployment nginx-deployment \
+--type=NodePort \
+--port=80
+```
+The manual prints `-\` and `-port=80`, which are misprints. Both flags need two dashes (`--type`, `--port`). The backslash at the end of a line continues the command onto the next line.
+
+**Step 9: Check the service**
+```bash
+kubectl get services
+```
+
+**Step 10: Access the web app**
+```bash
+minikube service nginx-deployment
+```
+This opens the browser at a URL like `http://192.168.49.2:3xxxx`, where you should see "Welcome to nginx!".
+
+**Step 11: Clean up pods**
+```bash
+kubectl delete pods --all
+```
+
+**Step 12: Delete all services**
+```bash
+kubectl delete svc --all
+```
+
+**Step 13: Delete all deployments**
+```bash
+kubectl delete deployments --all
+```
+
+If Step 5 throws a YAML error, it's almost always indentation. Use spaces, not tabs, and keep the nesting exactly as shown above.

@@ -1,0 +1,119 @@
+**Project structure**
+```
+Program-8/
+├── nodejs-configmap.yaml
+├── nodejs-pod.yaml
+└── server.js
+```
+
+**Step 1: Start the Minikube cluster**
+```bash
+minikube start
+```
+Wait until it says `Done! kubectl is now configured to use "minikube" cluster`. You can confirm it's running with:
+```bash
+kubectl get nodes
+```
+
+**Step 2: Write the Node.js app (`server.js`)**
+```javascript
+const http = require("http");
+const port = 3000;
+
+const server = http.createServer((req, res) => {
+  res.end("Hello from Node.js running inside Kubernetes!");
+});
+
+server.listen(port, () => {
+  console.log(`Server running at port ${port}`);
+});
+```
+
+**Step 3: Create a ConfigMap for the code (`nodejs-configmap.yaml`)**
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nodejs-app-config
+data:
+  server.js: |
+    const http = require("http");
+    const port = 3000;
+
+    const server = http.createServer((req, res) => {
+      res.end("Hello from Node.js running inside Kubernetes!");
+    });
+
+    server.listen(port, () => {
+      console.log(`Server running at port ${port}`);
+    });
+```
+
+**Step 4: Create the Pod YAML with Node.js as the base image (`nodejs-pod.yaml`)**
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nodejs-pod
+  labels:
+    app: nodejs
+spec:
+  containers:
+    - name: nodejs
+      image: node:18
+      command: ["node", "/usr/src/app/server.js"]
+      volumeMounts:
+        - name: app-code
+          mountPath: /usr/src/app
+      ports:
+        - containerPort: 3000
+  volumes:
+    - name: app-code
+      configMap:
+        name: nodejs-app-config
+```
+
+**Step 5: Apply the YAML files**
+```bash
+kubectl apply -f nodejs-configmap.yaml
+kubectl apply -f nodejs-pod.yaml
+```
+
+**Step 6: Check pod status**
+```bash
+kubectl get pods
+```
+Wait until `STATUS` shows `Running` and `READY` shows `1/1`. The first run can sit at `ContainerCreating` for a few minutes while it pulls `node:18`.
+
+**Step 7: Access the Node.js app**
+```bash
+kubectl port-forward pod/nodejs-pod 3000:3000
+```
+
+**Step 8: Check the output**
+Open `http://localhost:3000` in a browser. You should see:
+```
+Hello from Node.js running inside Kubernetes!
+```
+
+**Step 9: Delete all pods**
+```bash
+kubectl delete pods --all
+```
+
+**Step 10: Delete all services**
+```bash
+kubectl delete svc --all
+```
+
+**Step 11: Delete all deployments**
+```bash
+kubectl delete deployments --all
+```
+
+**Step 12 (optional): Stop Minikube**
+```bash
+minikube stop
+```
+
+Indentation matters in the YAML files. Use spaces, not tabs, or `kubectl apply` will fail. The `server.js` content inside the ConfigMap must also be indented under `server.js: |`.
